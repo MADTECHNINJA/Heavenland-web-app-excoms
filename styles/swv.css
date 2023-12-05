@@ -1,0 +1,89 @@
+#__nuxt .swv-dropdown,
+#__nuxt .swv-dropdown .swv-button,
+#__nuxt .swv-dropdown .swv-dropdown-list {
+    @apply w-full bg-black border-cyan-950 border rounded-none;
+}
+
+#__nuxt .swv-button {
+    @apply w-full h-11 md:h-9  border border-cyan-950 rounded-none text-cyan-950;
+}
+
+.swv-modal-title {
+    @apply text-cyan-950;
+}
+
+.swv-button.swv-button-trigger {
+    border: 1px solid #2bf5d1 !important;
+}
+
+.swv-modal-wrapper.swv-modal-wrapper-no-logo {
+    @apply rounded-none;
+    border-radius: none !important;
+}
+
+.swv-button.swv-button-trigger {
+    border-radius: none !important;
+    @apply rounded-none bg-black;
+}
+
+.swv-button:not([disabled]):hover {
+    border-radius: none !important;
+    @apply rounded-none bg-black !important;
+}
+
+.swv-dropdown-list.swv-dropdown-list-active {
+    @apply bg-black border border-cyan-950 text-white rounded-none !important;
+}
+
+.swv-dropdown-list {
+    @apply bg-black border border-cyan-950 text-white rounded-none !important;
+}
+
+#__nuxt .swv-button p {
+    @apply text-sm;
+}
+
+#__nuxt .swv-button-trigger {
+    @apply bg-black  border border-cyan-950;
+}
+
+#__nuxt .swv-button-trigger:hover {
+    @apply bg-black  border border-cyan-950;
+}
+
+body .swv-modal-wrapper,
+body .swv-modal-button-close {
+    @apply bg-black text-gray-300;
+}
+
+body .swv-modal-button-close:hover {
+    @apply text-gray-500;
+}
+
+body .swv-modal-wrapper .swv-button:not([disabled]):hover {
+    @apply bg-black;
+}
+
+body .swv-modal-wrapper .swv-button {
+    @apply text-gray-400;
+}
+
+body .swv-modal-overlay {
+    @apply bg-gray-800/60;
+}
+
+#__nuxt .swv-dropdown-list {
+    @apply text-white bg-black border-cyan-950 border rounded-none;
+}
+
+#__nuxt .swv-dropdown-list-item:not([disabled]):hover {
+    @apply bg-black border border-cyan-950;
+}
+
+#__nuxt .connected .swv-button.swv-button-trigger {
+    @apply bg-black border-cyan-950 border bg-none transition-none hover:brightness-100;
+}
+
+#__nuxt .swv-button.swv-button-trigger {
+    @apply bg-gradient-to-r bg-black border border-cyan-950 transition hover:brightness-125;
+}

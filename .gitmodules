@@ -1,0 +1,7 @@
+[submodule "js/contracts/staking"]
+	path = js/contracts/staking
+	url = git@github.com:heavenland-io/Excoms-Staking-Program.git
+
+[submodule "js/contracts/upgrader"]
+	path = js/contracts/upgrader
+	url = git@github.com:heavenland-io/Excoms-Upgrade-Program.git

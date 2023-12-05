@@ -1,0 +1,80 @@
+.formkit-input {
+    @apply py-2.5 bg-black   block w-full h-full pl-5 pr-20 sm:text-sm ring-offset-cyan-950 focus:ring-cyan-950 ring-1 border border-cyan-950;
+}
+
+textarea:focus,
+input:focus,
+.formkit {
+    outline: none !important;
+}
+
+.formkit-message {
+    @apply mt-1;
+}
+
+[data-invalid] .formkit-input {
+    @apply border-red-500 border  outline-none ring-0;
+}
+
+.invalid .formkit-input {
+    @apply border-red-500 border  outline-none ring-0 focus:ring-0;
+}
+
+.formkit-outer,
+.formkit-input,
+.formkit-inner {
+    @apply ring-offset-transparent !important;
+}
+
+.search-outer {
+    width: 100%;
+    position: relative;
+}
+
+.formkit-inner {
+    position: relative;
+    @apply focus:ring-0;
+    border: none;
+}
+
+.formkit-input {
+    @apply focus:ring-1;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.formkit-message {
+    @apply text-sm text-red-500;
+}
+
+/* Firefox */
+input[type='number'] {
+    -moz-appearance: textfield;
+}
+
+.invalid {
+    /* @apply border-red-500 border  outline-none ring-0 focus:ring-0;*/
+}
+
+.child-select {
+    top: 30px;
+    @apply ring-0 focus:ring-0;
+}
+
+input[type='search'] {
+    @apply border-none ring-0 ring-offset-transparent rounded-none !important;
+}
+
+input[type='search']::-webkit-search-cancel-button {
+    /* Remove default */
+    -webkit-appearance: none;
+    /*Your new styles */
+}
+
+.search-input::placeholder {
+    @apply text-cyan-300 !important;
+}

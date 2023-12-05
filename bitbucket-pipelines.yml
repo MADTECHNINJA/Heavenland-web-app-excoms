@@ -1,0 +1,246 @@
+options:
+  docker: true
+  size: 2x
+
+definitions:
+  services:
+    docker:
+      memory: 6144
+  # production steps
+  steps:
+    - step: &build-image_production
+        name: Build Docker image
+        image: google/cloud-sdk:alpine
+        script:
+          - git submodule update --init --recursive
+          - docker build -t web-market-hl-production-branch:${BITBUCKET_COMMIT} .
+          # Authenticating with the service account key file
+          - echo $GCLOUD_API_KEYFILE_PRODUCTION> /tmp/gcloud-api-key.json
+          - gcloud auth activate-service-account --key-file /tmp/gcloud-api-key.json
+          - gcloud config set project $GCLOUD_PROJECT_ID_PRODUCTION
+          # Tag container & push
+          - export TAG=$(echo "$BITBUCKET_TAG" | sed -e "s/v//g")
+          - export SUFFIX=$([[ ! -z "$TAG" ]] && echo ":$TAG" || echo "")
+          - export IMAGE_NAME=gcr.io/heavenland-production/web-market-hl-production-branch:${BITBUCKET_COMMIT}
+          - docker tag web-market-hl-production-branch:${BITBUCKET_COMMIT} ${IMAGE_NAME}
+          # Login to google docker hub
+          - cat /tmp/gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
+          - docker push ${IMAGE_NAME}
+          - gcloud container images list
+          - curl -o /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-388.0.0-linux-x86_64.tar.gz
+          - tar -xvf /tmp/google-cloud-sdk.tar.gz -C /tmp/
+          - /tmp/google-cloud-sdk/install.sh -q
+          - source /tmp/google-cloud-sdk/path.bash.inc
+          - apk add --no-cache openssh-client bash
+          # download helm
+          - export VERIFY_CHECKSUM=false
+          - curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+          - helm version
+          # push gke and aplly helm
+          - gcloud container clusters get-credentials general-cluster --zone=europe-west1-b --project $GCLOUD_PROJECT_ID_PRODUCTION
+          - gcloud components install kubectl
+          # upgrade helm
+          # - helm upgrade --install --namespace="heavenmarket-production" --wait --timeout 1000s --debug --set image.tag="${BITBUCKET_COMMIT}" wmprodchart ./deployment/web-marketplace
+          - helm upgrade 
+            --install
+            --namespace="hlwebmarket-production-branch"
+            --set app.name="hlwebmarket-production-branch"
+            --set ingress.name="hlwebmarket-production-branch-ingress"
+            --set ingress.host="heavenmarket.io"
+            --set app.replicaCount="2"
+            --set app.namespace="hlwebmarket-production-branch"
+            --set service.port="3000"
+            --set service.type="NodePort"
+            --set app.port="3000"
+            --set service.name="hlwebmarket-production-branch-cluster"
+            --set image.repo="heavenland-production"
+            --set image.name="web-market-hl-production-branch"
+            --set image.tag="${BITBUCKET_COMMIT}"
+            --wait
+            --timeout 1000s
+            --debug
+            hlwebmarket-production-helm
+            ./deployment/web-marketplace-prod
+
+  # staging steps
+    - step: &build-image_staging
+        name: Build Docker image
+        image: google/cloud-sdk:alpine
+        script:
+          - git submodule update --init --recursive
+          - docker build -f Dockerfile.staging -t web-market-hl:${BITBUCKET_COMMIT} .
+          # Authenticating with the service account key file
+          - echo $GCLOUD_API_KEYFILE_STAGING > /tmp/gcloud-api-key.json
+          - gcloud auth activate-service-account --key-file /tmp/gcloud-api-key.json
+          - gcloud config set project $GCLOUD_PROJECT_ID_STAGING
+          # Tag container & push
+          - export TAG=$(echo "$BITBUCKET_TAG" | sed -e "s/v//g")
+          - export SUFFIX=$([[ ! -z "$TAG" ]] && echo ":$TAG" || echo "")
+          - export IMAGE_NAME=gcr.io/heavenland-staging/web-market-hl:${BITBUCKET_COMMIT}
+          - docker tag web-market-hl:${BITBUCKET_COMMIT} ${IMAGE_NAME}
+          # Login to google docker hub
+          - cat /tmp/gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
+          - docker push ${IMAGE_NAME}
+          - gcloud container images list
+          - curl -o /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-388.0.0-linux-x86_64.tar.gz
+          - tar -xvf /tmp/google-cloud-sdk.tar.gz -C /tmp/
+          - /tmp/google-cloud-sdk/install.sh -q
+          - source /tmp/google-cloud-sdk/path.bash.inc
+          - apk add --no-cache openssh-client bash
+          # download helm
+          - export VERIFY_CHECKSUM=false
+          - curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+          - helm version
+          # push gke and aplly helm
+          - gcloud container clusters get-credentials general-cluster --zone=europe-west1-b --project $GCLOUD_PROJECT_ID_STAGING
+          - gcloud components install kubectl
+          # upgrade helm
+          # - helm upgrade --namespace="heavenmarket-staging" --wait --timeout 1000s --debug --set image.tag="${BITBUCKET_COMMIT}" wmchart ./deployment/web-marketplace
+          - helm upgrade 
+            --install
+            --namespace="heavenmarket-staging"
+            --set app.name="heavenmarket-staging"
+            --set ingress.name="heavenmarket-staging-ingress"
+            --set ingress.host="staging.heavenmarket.io"
+            --set ingress.tunnel_name="gke-tunnel-origin.heavenmarket.io"
+            --set app.replicaCount="2"
+            --set app.namespace="heavenmarket-staging"
+            --set service.port="80"
+            --set app.port="3000"
+            --set service.name="heavenmarket-staging-cluster"
+            --set image.repo="heavenland-staging"
+            --set image.name="web-market-hl"
+            --set image.tag="${BITBUCKET_COMMIT}"
+            --wait
+            --timeout 1000s
+            --debug
+            wmchart
+            ./deployment/web-marketplace
+
+  # main steps
+    - step: &build-image_main
+        name: Build Docker image
+        image: google/cloud-sdk:alpine
+        script:
+          - git submodule update --init --recursive
+          - docker build -t web-market-hl-prod:${BITBUCKET_COMMIT} .
+          # Authenticating with the service account key file
+          - echo $GCLOUD_API_KEYFILE_PRODUCTION> /tmp/gcloud-api-key.json
+          - gcloud auth activate-service-account --key-file /tmp/gcloud-api-key.json
+          - gcloud config set project $GCLOUD_PROJECT_ID_PRODUCTION
+          # Tag container & push
+          - export TAG=$(echo "$BITBUCKET_TAG" | sed -e "s/v//g")
+          - export SUFFIX=$([[ ! -z "$TAG" ]] && echo ":$TAG" || echo "")
+          - export IMAGE_NAME=gcr.io/heavenland-production/web-market-hl-prod:${BITBUCKET_COMMIT}
+          - docker tag web-market-hl-prod:${BITBUCKET_COMMIT} ${IMAGE_NAME}
+          # Login to google docker hub
+          - cat /tmp/gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
+          - docker push ${IMAGE_NAME}
+          - gcloud container images list
+          - curl -o /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-388.0.0-linux-x86_64.tar.gz
+          - tar -xvf /tmp/google-cloud-sdk.tar.gz -C /tmp/
+          - /tmp/google-cloud-sdk/install.sh -q
+          - source /tmp/google-cloud-sdk/path.bash.inc
+          - apk add --no-cache openssh-client bash
+          # download helm
+          - export VERIFY_CHECKSUM=false
+          - curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+          - helm version
+          # push gke and aplly helm
+          - gcloud container clusters get-credentials general-cluster --zone=europe-west1-b --project $GCLOUD_PROJECT_ID_PRODUCTION
+          - gcloud components install kubectl
+          # upgrade helm
+          # - helm upgrade --install --namespace="heavenmarket-production" --wait --timeout 1000s --debug --set image.tag="${BITBUCKET_COMMIT}" wmprodchart ./deployment/web-marketplace
+          - helm upgrade 
+            --install
+            --namespace="heavenmarket-production"
+            --set app.name="heavenmarket-production"
+            --set ingress.name="heavenmarket-production-ingress"
+            --set ingress.host="rc.heavenmarket.io"
+            --set app.replicaCount="2"
+            --set app.namespace="heavenmarket-production"
+            --set service.port="3000"
+            --set service.type="NodePort"
+            --set app.port="3000"
+            --set service.name="heavenmarket-production-cluster"
+            --set image.repo="heavenland-production"
+            --set image.name="web-market-hl-prod"
+            --set image.tag="${BITBUCKET_COMMIT}"
+            --wait
+            --timeout 1000s
+            --debug
+            wmprodchart
+            ./deployment/web-marketplace-prod
+
+  # develop steps
+    - step: &build-image_develop
+        name: Build Docker image
+        image: google/cloud-sdk:alpine
+        script:
+          - git submodule update --init --recursive
+          - docker build -f Dockerfile.develop -t web-market-hl-develop:${BITBUCKET_COMMIT} .
+          # Authenticating with the service account key file
+          - echo $GCLOUD_API_KEYFILE_DEVELOP> /tmp/gcloud-api-key.json
+          - gcloud auth activate-service-account --key-file /tmp/gcloud-api-key.json
+          - gcloud config set project heavenland-development
+          # Tag container & push
+          - export TAG=$(echo "$BITBUCKET_TAG" | sed -e "s/v//g")
+          - export SUFFIX=$([[ ! -z "$TAG" ]] && echo ":$TAG" || echo "")
+          - export IMAGE_NAME=gcr.io/heavenland-development/web-market-hl-develop:${BITBUCKET_COMMIT}
+          - docker tag web-market-hl-develop:${BITBUCKET_COMMIT} ${IMAGE_NAME}
+          # Login to google docker hub
+          - cat /tmp/gcloud-api-key.json | docker login -u _json_key --password-stdin https://gcr.io
+          - docker push ${IMAGE_NAME}
+          - gcloud container images list
+          - curl -o /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-388.0.0-linux-x86_64.tar.gz
+          - tar -xvf /tmp/google-cloud-sdk.tar.gz -C /tmp/
+          - /tmp/google-cloud-sdk/install.sh -q
+          - source /tmp/google-cloud-sdk/path.bash.inc
+          - apk add --no-cache openssh-client bash
+          # download helm
+          - export VERIFY_CHECKSUM=false
+          - curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+          - helm version
+          # push gke and aplly helm
+          - gcloud container clusters get-credentials general-cluster --zone=europe-west1-b --project heavenland-development
+          - gcloud components install kubectl
+          # upgrade helm
+          # - helm upgrade --install --namespace="heavenmarket-develop" --wait --timeout 1000s --debug --set image.tag="${BITBUCKET_COMMIT}" wmdevchart ./deployment/web-marketplace
+          - helm upgrade 
+            --install
+            --namespace="heavenmarket-develop"
+            --set app.name="heavenmarket-develop"
+            --set ingress.name="heavenmarket-develop-ingress"
+            --set ingress.host="wm.dev.heavenmarket.io"
+            --set app.replicaCount="2"
+            --set app.namespace="heavenmarket-develop"
+            --set service.port="3000"
+            --set service.type="NodePort"
+            --set app.port="3000"
+            --set service.name="heavenmarket-develop-cluster"
+            --set image.repo="heavenland-development"
+            --set image.name="web-market-hl-develop"
+            --set image.tag="${BITBUCKET_COMMIT}"
+            --wait
+            --timeout 1000s
+            --debug
+            wmdevchart
+            ./deployment/web-marketplace-dev
+
+pipelines:
+  tags:
+    v*:
+      - step: *build-image_production
+
+  branches:
+    production:
+      - step: *build-image_production
+
+    staging:
+      - step: *build-image_staging
+
+    main:
+      - step: *build-image_main
+
+    develop:
+      - step: *build-image_develop

@@ -1,0 +1,17 @@
+/// <reference types="vite/client" />
+interface ImportMetaEnv {
+    VITE_EXCOMS_CONNECTION_CLUSTER: string;
+    VITE_EXCOMS_NAME_CLUSTER: 'devnet' | 'mainnet-beta';
+    VITE_EXCOMS_MODE: string;
+    VITE_EXCOMS_GENZ_MINT_KEY: string;
+    VITE_EXCOMS_USDC_MINT_KEY: string;
+    VITE_EXCOMS_UPDATE_AUTHORITY_EXCOMS: string;
+    VITE_EXCOMS_API_URL: string;
+    VITE_EXCOMS_DEST_WALLET_ADDRESS_FEE: string;
+    VITE_EXCOMS_STAKING_PROGRAM_ADDRESS: string;
+    VITE_EXCOMS_STAKING_REWARD_VAULT: string;
+    VITE_EXCOMS_STAKING_REWARD_VAULTS: Array<string>;
+    VITE_EXCOMS_STAKING_BASE_PERIOD: number;
+    VITE_EXCOMS_STAKING_WALLET: string;
+    VITE_EXCOMS_STAKING_HTO_TREASURY: string;
+}

@@ -1,0 +1,20 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: web-market-hl-staging 
+  namespace: staging
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-market-hl-staging
+  template:
+    metadata:
+      labels:
+        app: web-market-hl-staging 
+    spec:
+      containers:
+        - name: web-market-hl-staging 
+          image: gcr.io/heavenland-staging/web-market-hl:latest
+          ports:
+          - containerPort: 3000

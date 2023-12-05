@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend-excoms-app-service
+  labels:
+    run: frontend-excoms-app
+
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend-excoms-app
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
